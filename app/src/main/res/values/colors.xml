@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#620131</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="my_prefered_color">#009999</color>
+    <color name="fab_tint">#3d5c5c</color>
+    <color name="variant">#64595e</color>
+</resources>

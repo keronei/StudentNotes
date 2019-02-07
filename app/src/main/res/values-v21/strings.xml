@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="heading_hint">Heading</string>
+    <string name="jolt_your_notes_here_hint">Jolt your notes here</string>
+</resources>

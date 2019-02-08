@@ -2,7 +2,9 @@ package ke.co.keronei.student;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,15 +13,41 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import static ke.co.keronei.student.StudentNoteDataBaseContract.*;
+
 public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter.ViewHolder>  {
     private final Context theContext;
     private final LayoutInflater layoutInflater;
-    private  final List<NoteInfo> mNotesList;
+    private   Cursor mCursor;
+    private int coursePos;
+    private int mNoteTitlePos;
+    private int mIdPos;
 
-    public NoteRecylerAdapter(Context theContext, List<NoteInfo> mNotesList) {
+    public NoteRecylerAdapter(Context theContext, Cursor cursor) {
         this.theContext = theContext;
         layoutInflater = LayoutInflater.from(theContext);
-        this.mNotesList = mNotesList;
+        mCursor = cursor;
+
+        populateColumnPositions();
+    }
+
+    private void populateColumnPositions() {
+        if(mCursor == null)
+            return;
+
+        coursePos = mCursor.getColumnIndex(NoteInfoEntry.COLUMN_COURSE_ID);
+        mNoteTitlePos = mCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
+        mIdPos = mCursor.getColumnIndex(NoteInfoEntry._ID);
+
+
+    }
+    public void changeCursor(Cursor cursor){
+        if(mCursor !=null ){
+            mCursor.close();
+        }
+        mCursor = cursor;
+        populateColumnPositions();
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -32,26 +60,29 @@ public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter
     @Override
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
 
-        NoteInfo mNotes = mNotesList.get(i);
+       mCursor.moveToPosition(i);
+       String courseTitle = mCursor.getString(coursePos);
+       String noteTitle = mCursor.getString(mNoteTitlePos);
+       int id = mCursor.getInt(mIdPos);
 
-        viewHolder.mCourseName.setText(mNotes.getCourse().getTitle());
-        viewHolder.mNoteHead.setText(mNotes.getTitle()) ;
-        viewHolder.mCurrentposition = i;
+        viewHolder.mCourseName.setText(courseTitle);
+        viewHolder.mNoteHead.setText(noteTitle) ;
+        viewHolder.mNoteIdInDatabase = id;
     }
 
     @Override
     public int getItemCount() {
-        return mNotesList.size();
+        return mCursor == null ? 0 : mCursor.getCount();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder{
 
         public final TextView mCourseName;
         public final TextView mNoteHead;
-        public int mCurrentposition;
+        public int mNoteIdInDatabase;
 
 
-        public ViewHolder(View itemView) {
+        public ViewHolder(final View itemView) {
 
             super(itemView);
 
@@ -61,9 +92,10 @@ public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(theContext, NoteActivity.class);
-                    intent.putExtra(NoteActivity.NOTE_POSITION, mCurrentposition);
-                    theContext.startActivity(intent);
+                    //Snackbar.make(itemView,String.valueOf(mNoteIdInDatabase), Snackbar.LENGTH_LONG).show();
+                   Intent intent = new Intent(theContext, NoteActivity.class);
+                   intent.putExtra(NoteActivity.NOTE_ID, mNoteIdInDatabase);
+                   theContext.startActivity(intent);
                 }
             });
 

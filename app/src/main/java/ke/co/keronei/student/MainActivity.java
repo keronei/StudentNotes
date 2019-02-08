@@ -2,6 +2,7 @@ package ke.co.keronei.student;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -22,6 +23,8 @@ import android.view.MenuItem;
 import android.widget.TextView;
 
 import java.util.List;
+
+import static ke.co.keronei.student.StudentNoteDataBaseContract.*;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -67,11 +70,26 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onPostResume() {
-        super.onPostResume();
-        mNoteRecycleAdapter.notifyDataSetChanged();
+    protected void onResume() {
+        super.onResume();
 
+        loadNoteData();
         updateUserDetail();
+    }
+
+    private void loadNoteData() {
+        SQLiteDatabase db = mDbOpenHelper.getReadableDatabase();
+        String[] NotesColumns = {
+                NoteInfoEntry.COLUMN_COURSE_ID,
+
+                NoteInfoEntry.COLUMN_NOTE_TITLE,
+                NoteInfoEntry._ID};
+
+        String OrderClient = NoteInfoEntry.COLUMN_COURSE_ID +" , "+ NoteInfoEntry.COLUMN_NOTE_TITLE;
+        Cursor NotesCursor = db.query(NoteInfoEntry.TABLE_NAME, NotesColumns, null,
+                null, null, null, OrderClient);
+
+        mNoteRecycleAdapter.changeCursor(NotesCursor);
     }
 
     @Override
@@ -103,9 +121,9 @@ public class MainActivity extends AppCompatActivity
         mCoursesLayoutManager = new GridLayoutManager(this, getResources().getInteger(R.integer.grid_span_count));
 
 
-        List<NoteInfo> mNotes = DataManager.getInstance().getNotes();
 
-        mNoteRecycleAdapter = new NoteRecylerAdapter(this,mNotes);
+
+        mNoteRecycleAdapter = new NoteRecylerAdapter(this, null);
 
         List<CourseInfo> mCourses = DataManager.getInstance().getCourses();
         mCourseRecyclerAdapter = new CourseRecylerAdapter(this,mCourses);

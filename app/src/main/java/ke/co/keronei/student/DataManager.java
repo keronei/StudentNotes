@@ -17,6 +17,7 @@ public class DataManager {
 
     private List<CourseInfo> mCourses = new ArrayList<>();
     private List<NoteInfo> mNotes = new ArrayList<>();
+    private static int idNote;
 
     public static DataManager getInstance() {
         if(ourInstance == null) {
@@ -28,13 +29,19 @@ public class DataManager {
     }
     public static void loadFromDatabase(StudentNoteOpenHelper openHelper){
             SQLiteDatabase db = openHelper.getReadableDatabase();
-        String[] columnsCourse = {CourseInfoEntry.COLUMN_COURSE_ID, CourseInfoEntry.COLUMN_COURSE_TITLE};
+        String[] columnsCourse = {
+                CourseInfoEntry.COLUMN_COURSE_ID,
+                CourseInfoEntry.COLUMN_COURSE_TITLE};
         Cursor CourseCursor = db.query(CourseInfoEntry.TABLE_NAME, columnsCourse, null, null, null
                 , null, CourseInfoEntry.COLUMN_COURSE_TITLE + " DESC");
 
         loadCoursesFromDataBase(CourseCursor);
 
-        String[] NotesColumns = {NoteInfoEntry.COLUMN_COURSE_ID, NoteInfoEntry.COLUMN_NOTE_TEXT, NoteInfoEntry.COLUMN_NOTE_TITLE};
+        String[] NotesColumns = {
+                NoteInfoEntry.COLUMN_COURSE_ID,
+                NoteInfoEntry.COLUMN_NOTE_TEXT,
+                NoteInfoEntry.COLUMN_NOTE_TITLE,
+                NoteInfoEntry._ID};
 
         String OrderClient = NoteInfoEntry.COLUMN_COURSE_ID +" , "+NoteInfoEntry.COLUMN_NOTE_TITLE;
         Cursor NotesCursor = db.query(NoteInfoEntry.TABLE_NAME, NotesColumns, null,
@@ -49,6 +56,7 @@ public class DataManager {
         int noteTitlePos = notesCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
         int noteTextPos = notesCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TEXT);
         int courseIdPos = notesCursor.getColumnIndex(NoteInfoEntry.COLUMN_COURSE_ID);
+        int posId = notesCursor.getColumnIndex(NoteInfoEntry._ID);
 
         DataManager dataManager = getInstance();
         dataManager.mNotes.clear();
@@ -56,9 +64,10 @@ public class DataManager {
             String noteTitle = notesCursor.getString(noteTitlePos);
             String noteText = notesCursor.getString(noteTextPos);
             String courseId = notesCursor.getString(courseIdPos);
+            idNote = notesCursor.getInt(posId);
 
             CourseInfo courseInfo = dataManager.getCourse(courseId);
-            NoteInfo note = new NoteInfo(courseInfo, noteTitle, noteText);
+            NoteInfo note = new NoteInfo(idNote, courseInfo, noteTitle, noteText);
             dataManager.mNotes.add(note);
 
         }
@@ -85,11 +94,11 @@ public class DataManager {
     }
 
     public String getCurrentUserName() {
-        return "Jim Wilson";
+        return "P Keron";
     }
 
     public String getCurrentUserEmail() {
-        return "jimw@jwhh.com";
+        return "pkeron@keron.co.ke";
     }
 
     public List<NoteInfo> getNotes() {

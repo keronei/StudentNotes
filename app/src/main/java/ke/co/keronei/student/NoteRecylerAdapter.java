@@ -4,16 +4,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.util.List;
-
-import static ke.co.keronei.student.StudentNoteDataBaseContract.*;
+import static ke.co.keronei.student.StudentNoteDataBaseContract.CourseInfoEntry;
+import static ke.co.keronei.student.StudentNoteDataBaseContract.NoteInfoEntry;
 
 public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter.ViewHolder>  {
     private final Context theContext;
@@ -35,7 +33,7 @@ public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter
         if(mCursor == null)
             return;
 
-        coursePos = mCursor.getColumnIndex(NoteInfoEntry.COLUMN_COURSE_ID);
+        coursePos = mCursor.getColumnIndex(CourseInfoEntry.COLUMN_COURSE_TITLE);
         mNoteTitlePos = mCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
         mIdPos = mCursor.getColumnIndex(NoteInfoEntry._ID);
 

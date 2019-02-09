@@ -7,24 +7,25 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 
 import java.util.List;
 
-import static ke.co.keronei.student.StudentNoteDataBaseContract.*;
+import static ke.co.keronei.student.StudentNoteDataBaseContract.CourseInfoEntry;
+import static ke.co.keronei.student.StudentNoteDataBaseContract.NoteInfoEntry;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -80,13 +81,17 @@ public class MainActivity extends AppCompatActivity
     private void loadNoteData() {
         SQLiteDatabase db = mDbOpenHelper.getReadableDatabase();
         String[] NotesColumns = {
-                NoteInfoEntry.COLUMN_COURSE_ID,
-
+                CourseInfoEntry.COLUMN_COURSE_TITLE,
                 NoteInfoEntry.COLUMN_NOTE_TITLE,
-                NoteInfoEntry._ID};
+                NoteInfoEntry.getQualifiedName(NoteInfoEntry._ID)};
 
-        String OrderClient = NoteInfoEntry.COLUMN_COURSE_ID +" , "+ NoteInfoEntry.COLUMN_NOTE_TITLE;
-        Cursor NotesCursor = db.query(NoteInfoEntry.TABLE_NAME, NotesColumns, null,
+        String joinedTables  = NoteInfoEntry.TABLE_NAME + " JOIN " + CourseInfoEntry.TABLE_NAME +
+                " ON " + NoteInfoEntry.getQualifiedName(NoteInfoEntry.COLUMN_COURSE_ID) + " = "+
+                CourseInfoEntry.getQualifiedName(NoteInfoEntry.COLUMN_COURSE_ID);
+
+        String OrderClient = CourseInfoEntry.COLUMN_COURSE_TITLE +" , "+ NoteInfoEntry.COLUMN_NOTE_TITLE;
+
+        Cursor NotesCursor = db.query(joinedTables, NotesColumns, null,
                 null, null, null, OrderClient);
 
         mNoteRecycleAdapter.changeCursor(NotesCursor);

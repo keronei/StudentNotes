@@ -1,23 +1,23 @@
 package ke.co.keronei.student;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 
-import java.util.List;
+import static ke.co.keronei.student.StudentNoteDataBaseContract.CourseInfoEntry;
+import static ke.co.keronei.student.StudentNoteDataBaseContract.NoteInfoEntry;
 
-import static ke.co.keronei.student.StudentNoteDataBaseContract.*;
-
-public class NoteActivity extends AppCompatActivity {
+public class NoteActivity extends  AppCompatActivity {
 
     public  static final String NOTE_ID = "ke.co.keronei.student.NOTE_ID";
 
@@ -27,6 +27,7 @@ public class NoteActivity extends AppCompatActivity {
     public  static final String ORIGINAL_NOTE_CONTENT = "ke.co.keronei.student.ORIGINAL_NOTE_CONTENT";
 
     public static final int ID_DEFAULT = -1;
+    public static final int LOADER_ID = 0;
     private NoteInfo note;
     private boolean isNewNoteState;
     private Spinner notesSpinner;
@@ -38,12 +39,13 @@ public class NoteActivity extends AppCompatActivity {
     private String originalNoteHead;
     private String originalNoteContent;
     private int lastNoteIndex;
-    private StudentNoteOpenHelper studentNoteOpenHelper;
+    public StudentNoteOpenHelper studentNoteOpenHelper;
     private Cursor mNoteCursor;
     private int mCourseId;
+
     private int mNoteTitlePos;
     private int mActualNoteText;
-    private int databaseId;
+    public int databaseId;
     private SimpleCursorAdapter simpleCursorAdapter;
 
     @Override
@@ -81,30 +83,18 @@ public class NoteActivity extends AppCompatActivity {
         }
 
 
-
         noteHead = (EditText) findViewById(R.id.edit_note_head);
 
         notecontent = (EditText) findViewById(R.id.edit_note_content);
 
         if(!isNewNoteState)
 
-            loadNoteData();
+          loadSomeNotesData();
 
     }
 
-    private void loadSomeCourseData() {
-        SQLiteDatabase db = studentNoteOpenHelper.getReadableDatabase();
-        String[] columns = {
-                CourseInfoEntry.COLUMN_COURSE_TITLE,
-                CourseInfoEntry.COLUMN_COURSE_ID,
-                CourseInfoEntry._ID
-        };
-        Cursor cursor = db.query(CourseInfoEntry.TABLE_NAME, columns, null, null,
-                null, null, CourseInfoEntry.COLUMN_COURSE_TITLE);
-        simpleCursorAdapter.changeCursor(cursor);
-    }
+    private void loadSomeNotesData() {
 
-    private void loadNoteData() {
 
         SQLiteDatabase db = studentNoteOpenHelper.getReadableDatabase();
 
@@ -119,7 +109,7 @@ public class NoteActivity extends AppCompatActivity {
 
         };
 
-        mNoteCursor = db.query(NoteInfoEntry.TABLE_NAME, noteColumns, selection, selectionArgs,
+       mNoteCursor = db.query(NoteInfoEntry.TABLE_NAME, noteColumns, selection, selectionArgs,
                 null, null, null);
 
         mCourseId = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_COURSE_ID);
@@ -130,6 +120,32 @@ public class NoteActivity extends AppCompatActivity {
 
     }
 
+    public void updateNoteToDatabase(String courseId, String noteTitle, String noteText){
+        String selection = NoteInfoEntry._ID + " = ? ";
+        String[] selectionArgs = {Integer.toString(databaseId)};
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(NoteInfoEntry.COLUMN_COURSE_ID, courseId);
+        contentValues.put(NoteInfoEntry.COLUMN_NOTE_TITLE, noteTitle);
+        contentValues.put(NoteInfoEntry.COLUMN_NOTE_TEXT, noteText);
+
+        SQLiteDatabase sqLiteDatabase = studentNoteOpenHelper.getWritableDatabase();
+        sqLiteDatabase.update(NoteInfoEntry.TABLE_NAME,contentValues, selection, selectionArgs);
+    }
+
+
+    private void loadSomeCourseData() {
+        SQLiteDatabase db = studentNoteOpenHelper.getReadableDatabase();
+        String[] columns = {
+                CourseInfoEntry.COLUMN_COURSE_TITLE,
+                CourseInfoEntry.COLUMN_COURSE_ID,
+                CourseInfoEntry._ID
+        };
+        Cursor cursor = db.query(CourseInfoEntry.TABLE_NAME, columns, null, null,
+                null, null, CourseInfoEntry.COLUMN_COURSE_TITLE);
+        simpleCursorAdapter.changeCursor(cursor);
+    }
+
+
     private void restoreInstanceState(Bundle savedInstanceState) {
         originalNoteId = savedInstanceState.getString(ORIGINAL_NOTE_ID);
         originalNoteHead = savedInstanceState.getString(ORIGINAL_NOTE_HEAD);
@@ -139,10 +155,6 @@ public class NoteActivity extends AppCompatActivity {
     private void saveOriginals() {
         if(isNewNoteState)
             return;
-        //originalNoteId = note.getCourse().getCourseId();
-        //originalNoteHead = note.getTitle();
-        //originalNoteContent = note.getText();
-
     }
 
 
@@ -160,9 +172,6 @@ public class NoteActivity extends AppCompatActivity {
         String courseId = mNoteCursor.getString(mCourseId);
         String noteTitle = mNoteCursor.getString(mNoteTitlePos);
         String noteActualText = mNoteCursor.getString(mActualNoteText);
-
-
-
 
 
         int noteIndex = getIndexOf(courseId);
@@ -211,12 +220,14 @@ public class NoteActivity extends AppCompatActivity {
     }
 
     private void createNewNote() {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(NoteInfoEntry.COLUMN_COURSE_ID, "");
+        contentValues.put(NoteInfoEntry.COLUMN_NOTE_TITLE, "");
+        contentValues.put(NoteInfoEntry.COLUMN_NOTE_TEXT, "");
 
-        DataManager datamng = DataManager.getInstance();
+        SQLiteDatabase db = studentNoteOpenHelper.getWritableDatabase();
+        databaseId = (int)db.insert(NoteInfoEntry.TABLE_NAME, null, contentValues);
 
-        noteid = datamng.createNewNote();
-
-       // note = datamng.getNotes().get(noteid);
     }
 
     @Override
@@ -232,7 +243,7 @@ public class NoteActivity extends AppCompatActivity {
 
         if(isCancellingNote){
             if(isNewNoteState) {
-                DataManager.getInstance().removeNote(noteid);
+                removePlaceHolderFromDatabase();
             }else {
                 storePreviousCourseValues();
             }
@@ -243,18 +254,48 @@ public class NoteActivity extends AppCompatActivity {
 
     }
 
+    private void removePlaceHolderFromDatabase() {
+        final String selection = NoteInfoEntry._ID + " = ? ";
+        final String[] selectionArgs = {Integer.toString(databaseId)};
+
+        AsyncTask delete = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                SQLiteDatabase sqLiteDatabase = studentNoteOpenHelper.getWritableDatabase();
+                sqLiteDatabase.delete(NoteInfoEntry.TABLE_NAME, selection, selectionArgs);
+                return null;
+            }
+        };
+
+        delete.execute();
+
+    }
+
     private void storePreviousCourseValues() {
-        CourseInfo course = DataManager.getInstance().getCourse(originalNoteId);
+       // CourseInfo course = DataManager.getInstance().getCourse(originalNoteId);
        /* note.setCourse(course);
         note.setTitle(originalNoteHead);
         note.setText(originalNoteContent );
     */}
 
     private void SaveNote() {
-       /* note.setCourse((CourseInfo)notesSpinner.getSelectedItem());
-        note.setTitle(noteHead.getText().toString());
-        note.setText(notecontent.getText().toString());
-*/
+        String courseID = getTheCourseId();
+
+        String noteHeadString = noteHead.getText().toString();
+        String actualNoteText = notecontent.getText().toString();
+
+        updateNoteToDatabase(courseID, noteHeadString, actualNoteText);
+
+    }
+
+    private String getTheCourseId() {
+        int selectedItemPos = notesSpinner.getSelectedItemPosition();
+        Cursor cursor = simpleCursorAdapter.getCursor();
+        cursor.moveToPosition(selectedItemPos);
+        int courseIdPos = cursor.getColumnIndex(CourseInfoEntry.COLUMN_COURSE_ID);
+
+        return cursor.getString(courseIdPos);
+
     }
 
 
@@ -294,8 +335,6 @@ public class NoteActivity extends AppCompatActivity {
     private void moveToNextNote() {
         SaveNote();
         ++noteid;
-
-       // note = DataManager.getInstance().getNotes().get(noteid);
         saveOriginals();
         displayNote();
         invalidateOptionsMenu();
@@ -319,4 +358,6 @@ public class NoteActivity extends AppCompatActivity {
 
 
     }
+
+
 }

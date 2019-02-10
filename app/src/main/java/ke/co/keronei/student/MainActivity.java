@@ -6,9 +6,14 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -26,10 +31,12 @@ import java.util.List;
 
 import static ke.co.keronei.student.StudentNoteDataBaseContract.CourseInfoEntry;
 import static ke.co.keronei.student.StudentNoteDataBaseContract.NoteInfoEntry;
+import static ke.co.keronei.student.StudentProviderContract.Notes;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, LoaderManager.LoaderCallbacks<Cursor> {
 
+    public static final int LOADER_ID = 21;
     private NoteRecylerAdapter mNoteRecycleAdapter;
     private RecyclerView recyclerDisplayContent;
     private LinearLayoutManager mNotesLayout;
@@ -74,7 +81,8 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
 
-        loadNoteData();
+        getSupportLoaderManager().restartLoader(LOADER_ID,null, this);
+        //loadNoteData();
         updateUserDetail();
     }
 
@@ -222,5 +230,41 @@ public class MainActivity extends AppCompatActivity
 
     private void handleAction(String message) {
 
+    }
+
+    @NonNull
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, @Nullable Bundle bundle) {
+        CursorLoader loader = null;
+        if(i == LOADER_ID) {
+            final String[] noteColumns = {
+                    Notes._ID,
+                    Notes.COLUMN_NOTE_TITLE,
+                    Notes.COLUMN_COURSE_TITLE
+            };
+            final String noteOrderBy = Notes.COLUMN_COURSE_TITLE +
+                    "," + Notes.COLUMN_NOTE_TITLE;
+
+            loader = new CursorLoader(this, Notes.EXPANDED_CONTENT_URI, noteColumns,
+                    null, null, noteOrderBy);
+
+        }
+        return loader;
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
+
+        if(loader.getId() == LOADER_ID)  {
+            mNoteRecycleAdapter.changeCursor(cursor);
+        }
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+
+        if(loader.getId() == LOADER_ID)  {
+            mNoteRecycleAdapter.changeCursor(null);
+        }
     }
 }

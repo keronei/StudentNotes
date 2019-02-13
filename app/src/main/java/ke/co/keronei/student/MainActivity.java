@@ -3,7 +3,6 @@ package ke.co.keronei.student;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -29,8 +28,6 @@ import android.widget.TextView;
 
 import java.util.List;
 
-import static ke.co.keronei.student.StudentNoteDataBaseContract.CourseInfoEntry;
-import static ke.co.keronei.student.StudentNoteDataBaseContract.NoteInfoEntry;
 import static ke.co.keronei.student.StudentProviderContract.Notes;
 
 public class MainActivity extends AppCompatActivity
@@ -47,6 +44,7 @@ public class MainActivity extends AppCompatActivity
     private StudentNoteOpenHelper mDbOpenHelper;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        mDbOpenHelper = new StudentNoteOpenHelper(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -70,7 +68,7 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-        mDbOpenHelper = new StudentNoteOpenHelper(this);
+
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -84,9 +82,10 @@ public class MainActivity extends AppCompatActivity
         getSupportLoaderManager().restartLoader(LOADER_ID,null, this);
         //loadNoteData();
         updateUserDetail();
+        //mNoteRecycleAdapter.notifyDataSetChanged();
     }
 
-    private void loadNoteData() {
+   /* private void loadNoteData() {
         SQLiteDatabase db = mDbOpenHelper.getReadableDatabase();
         String[] NotesColumns = {
                 CourseInfoEntry.COLUMN_COURSE_TITLE,
@@ -103,12 +102,13 @@ public class MainActivity extends AppCompatActivity
                 null, null, null, OrderClient);
 
         mNoteRecycleAdapter.changeCursor(NotesCursor);
-    }
+    }*/
 
     @Override
     protected void onDestroy() {
         mDbOpenHelper.close();
         super.onDestroy();
+
     }
 
     private void updateUserDetail() {
@@ -132,9 +132,6 @@ public class MainActivity extends AppCompatActivity
         recyclerDisplayContent = (RecyclerView) findViewById(R.id.recycler_with_drawer);
         mNotesLayout = new LinearLayoutManager(this);
         mCoursesLayoutManager = new GridLayoutManager(this, getResources().getInteger(R.integer.grid_span_count));
-
-
-
 
         mNoteRecycleAdapter = new NoteRecylerAdapter(this, null);
 
@@ -162,7 +159,7 @@ public class MainActivity extends AppCompatActivity
     private void selectMenuItem(int id) {
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         Menu menu = navigationView.getMenu();
-        MenuItem menuItem = menu.findItem(id).setChecked(true);
+        menu.findItem(id).setChecked(true);
     }
 
     @Override
@@ -226,10 +223,6 @@ public class MainActivity extends AppCompatActivity
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         Snackbar.make(view, "Share via --"+
                 sharedPreferences.getString("favourite_places",""), Snackbar.LENGTH_LONG).show();
-    }
-
-    private void handleAction(String message) {
-
     }
 
     @NonNull

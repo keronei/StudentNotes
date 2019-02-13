@@ -117,8 +117,7 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
         contentValues.put(NoteInfoEntry.COLUMN_NOTE_TITLE, noteTitle);
         contentValues.put(NoteInfoEntry.COLUMN_NOTE_TEXT, noteText);
 
-        SQLiteDatabase sqLiteDatabase = studentNoteOpenHelper.getWritableDatabase();
-        sqLiteDatabase.update(NoteInfoEntry.TABLE_NAME,contentValues, selection, selectionArgs);
+      getContentResolver().update(mNoteUri, contentValues, null, null);
     }
 
 
@@ -258,8 +257,7 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
         AsyncTask delete = new AsyncTask() {
             @Override
             protected Object doInBackground(Object[] objects) {
-                SQLiteDatabase sqLiteDatabase = studentNoteOpenHelper.getWritableDatabase();
-                sqLiteDatabase.delete(NoteInfoEntry.TABLE_NAME, selection, selectionArgs);
+              getContentResolver().delete(mNoteUri, null,null);
 
                 return null;
             }
@@ -318,8 +316,15 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
         }else if(id == R.id.move_to_next){
             moveToNextNote();
         }
+        else if(id == R.id.set_reminder){
+            createNotification();
+        }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void createNotification() {
+        RemindNotesReview.notify(this,noteHead.getText().toString(), notecontent.getText().toString(),(int)ContentUris.parseId(mNoteUri) );
     }
 
     @Override
@@ -333,7 +338,7 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
 
     private void moveToNextNote() {
         SaveNote();
-        ++noteid;
+        ++databaseId;
         saveOriginals();
         displayNote();
         invalidateOptionsMenu();
@@ -421,7 +426,7 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
         mNoteCursor = data;
         mCourseId = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_COURSE_ID);
         mNoteTitlePos = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
-        mNoteTitlePos = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TEXT);
+        mActualNoteText = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TEXT);
 
         mNoteCursor.moveToFirst();
 

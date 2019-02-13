@@ -30,14 +30,19 @@ public class studentProviderCorrected extends ContentProvider {
 
     public static final int NOTES_EXPANDED = 4;
 
-    private static final  int ROW_ID = 3;
+    private static final  int NOTES_ROW = 3;
+
+    private static final int COURSE_ROW = 5;
+
+    private static final int NOTE_PATH_EXPANDED_ROW = 6;
 
     static {
         sUriMatcher.addURI(AUTHORITY, Courses.PATH, COURSES);
         sUriMatcher.addURI(AUTHORITY, Notes.PATH,  NOTES);
         sUriMatcher.addURI(AUTHORITY, Notes.PATH_EXPANDED, NOTES_EXPANDED);
-
-        sUriMatcher.addURI(AUTHORITY, Notes.PATH+"/#", ROW_ID);
+        sUriMatcher.addURI(AUTHORITY, Courses.PATH+"/#", COURSE_ROW);
+        sUriMatcher.addURI(AUTHORITY, Notes.PATH+"/#", NOTES_ROW);
+        sUriMatcher.addURI(AUTHORITY, Notes.PATH_EXPANDED+"/#", NOTE_PATH_EXPANDED_ROW);
     }
 
     public studentProviderCorrected() {
@@ -45,8 +50,40 @@ public class studentProviderCorrected extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        // Implement this to handle requests to delete one or more rows.
-        throw new UnsupportedOperationException("Not yet implemented");
+
+        long rowId = -1;
+        String rowSelection = null;
+        String[] rowSelectionArgs = null;
+        int nRows = -1;
+
+        SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
+
+        int uriMatch = sUriMatcher.match(uri);
+        switch (uriMatch){
+            case COURSES:
+                nRows = db.delete(CourseInfoEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+            case NOTES:
+                nRows = db.delete(NoteInfoEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+            case COURSE_ROW:
+                rowId = ContentUris.parseId(uri);
+                rowSelection = CourseInfoEntry._ID +"= ?";
+                rowSelectionArgs = new String[]{Long.toString(rowId)};
+                nRows = db.delete(CourseInfoEntry.TABLE_NAME, rowSelection, rowSelectionArgs );
+                break;
+            case NOTES_ROW :
+                rowId = ContentUris.parseId(uri);
+                rowSelection = NoteInfoEntry._ID +"= ?";
+                rowSelectionArgs = new String[]{Long.toString(rowId)};
+                nRows = db.delete(NoteInfoEntry.TABLE_NAME, rowSelection, rowSelectionArgs);
+                break;
+            case NOTE_PATH_EXPANDED_ROW:
+                break;
+            case NOTES_EXPANDED:
+                break;
+        }
+    return  nRows;
     }
 
     @Override
@@ -64,7 +101,7 @@ public class studentProviderCorrected extends ContentProvider {
             case NOTES_EXPANDED:
                 mimeType = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + MIME_VENDOR_TYPE + Notes.PATH_EXPANDED;
                 break;
-            case ROW_ID:
+            case NOTES_ROW:
                 mimeType = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + MIME_VENDOR_TYPE + Notes.PATH;
                 break;
                 }
@@ -106,7 +143,11 @@ public class studentProviderCorrected extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
                         String[] selectionArgs, String sortOrder) {
+        long rowId = -1;
         Cursor cursor = null;
+        String rowSelection = null;
+        String[] rowSelectionArgs = null;
+
         SQLiteDatabase db = mDbOpenHelper.getReadableDatabase();
 
         int UriMatch = sUriMatcher.match(uri);
@@ -126,23 +167,33 @@ public class studentProviderCorrected extends ContentProvider {
                 cursor = fetchExpanded(db, projection, selection, selectionArgs ,sortOrder);
 
                 break;
-            case ROW_ID:
-                long rowId = ContentUris.parseId(uri);
+            case NOTES_ROW:
+                 rowId = ContentUris.parseId(uri);
                 String requestedRow = NoteInfoEntry._ID + "= ?";
-                String[] rowSelectionArgs = new String[]{Long.toString(rowId)};
+                 rowSelectionArgs = new String[]{Long.toString(rowId)};
                 cursor = db.query(NoteInfoEntry.TABLE_NAME, projection, requestedRow, rowSelectionArgs,
                         null,null, null);
                 break;
-
-
-
-
+            case COURSE_ROW:
+                rowId = ContentUris.parseId(uri);
+                rowSelection = CourseInfoEntry._ID+"= ?";
+                rowSelectionArgs = new String[]{Long.toString(rowId)};
+                cursor = db.query(CourseInfoEntry.TABLE_NAME, projection, rowSelection,
+                        rowSelectionArgs, null, null, null);
+                break;
+            case NOTE_PATH_EXPANDED_ROW:
+                rowId = ContentUris.parseId(uri);
+                rowSelection = NoteInfoEntry.getQualifiedName(NoteInfoEntry._ID)+" = ?";
+                rowSelectionArgs = new String[]{Long.toString(rowId)};
+                cursor = fetchExpanded(db, projection, rowSelection, rowSelectionArgs,null );
+                break;
 
         }
 
 
         return  cursor;
     }
+
 
     private Cursor fetchExpanded(SQLiteDatabase db, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 
@@ -165,7 +216,38 @@ public class studentProviderCorrected extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection,
                       String[] selectionArgs) {
-        // TODO: Implement this to handle requests to update one or more rows.
-        throw new UnsupportedOperationException("Not yet implemented");
+        long rowId = -1;
+        String rowSelection = null;
+        String[] rowSelectionArgs = null;
+        int nRows = -1;
+        SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
+        int uriMatcher = sUriMatcher.match(uri);
+
+        switch (uriMatcher){
+            case NOTES:
+                nRows = db.update(NoteInfoEntry.TABLE_NAME, values, selection, selectionArgs);
+                break;
+            case COURSES:
+                nRows = db.update(CourseInfoEntry.TABLE_NAME, values, selection, selectionArgs);
+                break;
+            case COURSE_ROW:
+                rowId = ContentUris.parseId(uri);
+                rowSelection = CourseInfoEntry._ID + " = ?";
+                rowSelectionArgs = new String[]{Long.toString(rowId)};
+                nRows = db.update(CourseInfoEntry.TABLE_NAME, values, rowSelection, rowSelectionArgs);
+                break;
+            case NOTES_ROW:
+                rowId = ContentUris.parseId(uri);
+                rowSelection = NoteInfoEntry._ID + " = ?";
+                rowSelectionArgs = new String[]{Long.toString(rowId)};
+                nRows = db.update(NoteInfoEntry.TABLE_NAME, values, rowSelection, rowSelectionArgs);
+            case NOTE_PATH_EXPANDED_ROW:
+                break;
+            case NOTES_EXPANDED:
+                break;
+
+
+        }
+return nRows;
     }
 }

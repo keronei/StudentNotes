@@ -13,11 +13,18 @@
         android:icon="@android:drawable/ic_media_next"
         android:orderInCategory="101"
         android:title="Next"
-        android:visible="false"
+
         app:showAsAction="ifRoom|withText" />
     <item
         android:id="@+id/send_mail"
         android:orderInCategory="102"
         android:title="Share via Mail"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/set_reminder"
+        android:icon="@android:drawable/ic_popup_reminder"
+        android:orderInCategory="103"
+        android:title="Remind me"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
 </menu>

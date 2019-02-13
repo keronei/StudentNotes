@@ -21,8 +21,8 @@ public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter
     private int mNoteTitlePos;
     private int mIdPos;
 
-    public NoteRecylerAdapter(Context theContext, Cursor cursor) {
-        this.theContext = theContext;
+    public NoteRecylerAdapter(Context mcontext, Cursor cursor) {
+        theContext = mcontext;
         layoutInflater = LayoutInflater.from(theContext);
         mCursor = cursor;
 
@@ -40,9 +40,9 @@ public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter
 
     }
     public void changeCursor(Cursor cursor){
-        if(mCursor !=null ){
+        if(mCursor !=null )
             mCursor.close();
-        }
+
         mCursor = cursor;
         populateColumnPositions();
         notifyDataSetChanged();

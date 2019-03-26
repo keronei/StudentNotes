@@ -18,10 +18,10 @@ public class CourseRecylerAdapter extends  RecyclerView.Adapter<CourseRecylerAda
     private  final List<CourseInfo> mCoursesList;
     private CourseInfo mCourse;
 
-    public CourseRecylerAdapter(Context theContext, List<CourseInfo> mNotesList) {
-        this.theContext = theContext;
+    public CourseRecylerAdapter(Context context, List<CourseInfo> mNotesList) {
+        theContext = context;
         layoutInflater = LayoutInflater.from(theContext);
-        this.mCoursesList = mNotesList;
+        mCoursesList = mNotesList;
     }
 
     @NonNull
@@ -30,6 +30,21 @@ public class CourseRecylerAdapter extends  RecyclerView.Adapter<CourseRecylerAda
         View itemView = layoutInflater.inflate(R.layout.courses_item_in_list, viewGroup, false);
         return new ViewHolder(itemView );
     }
+
+    public int CheckCourseIdToRemove(int noteId){
+
+         return mCoursesList.get(noteId).getCourseID();
+
+
+    }
+
+    public void RefreshContent(List<CourseInfo> courseInfo){
+        mCoursesList.clear();
+
+        mCoursesList.addAll(courseInfo);
+
+    }
+
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {

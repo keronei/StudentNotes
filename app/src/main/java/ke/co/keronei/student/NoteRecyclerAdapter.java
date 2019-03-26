@@ -23,8 +23,9 @@ public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter
 
     public NoteRecylerAdapter(Context mcontext, Cursor cursor) {
         theContext = mcontext;
-        layoutInflater = LayoutInflater.from(theContext);
         mCursor = cursor;
+        layoutInflater = LayoutInflater.from(theContext);
+
 
         populateColumnPositions();
     }
@@ -40,7 +41,7 @@ public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter
 
     }
     public void changeCursor(Cursor cursor){
-        if(mCursor !=null )
+        if(mCursor != null )
             mCursor.close();
 
         mCursor = cursor;
@@ -48,15 +49,15 @@ public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter
         notifyDataSetChanged();
     }
 
-    @NonNull
+
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+    public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View itemView = layoutInflater.inflate(R.layout.item_in_list, viewGroup, false);
         return new ViewHolder(itemView );
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
+    public void onBindViewHolder(ViewHolder viewHolder, int i) {
 
        mCursor.moveToPosition(i);
        String courseTitle = mCursor.getString(coursePos);

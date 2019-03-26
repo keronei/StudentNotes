@@ -5,9 +5,10 @@
     <item
         android:id="@+id/discard_note"
         android:icon="@android:drawable/ic_menu_revert"
-        android:orderInCategory="100"
+        android:orderInCategory="99"
         android:title="Cancel"
         app:showAsAction="ifRoom|withText" />
+
     <item
         android:id="@+id/move_to_next"
         android:icon="@android:drawable/ic_media_next"
@@ -15,6 +16,8 @@
         android:title="Next"
 
         app:showAsAction="ifRoom|withText" />
+
+
     <item
         android:id="@+id/send_mail"
         android:orderInCategory="102"

@@ -13,17 +13,21 @@ import java.util.List;
 public final class CourseInfo implements Parcelable {
     private final String mCourseId;
     private final String mTitle;
+    private final int mCourseID;
     private final List<ModuleInfo> mModules;
 
-    public CourseInfo(String courseId, String title, List<ModuleInfo> modules) {
+    public CourseInfo(String courseId, String title, int actualIntID, List<ModuleInfo> modules) {
         mCourseId = courseId;
         mTitle = title;
         mModules = modules;
+        mCourseID = actualIntID;
+
     }
 
     private CourseInfo(Parcel source) {
         mCourseId = source.readString();
         mTitle = source.readString();
+        mCourseID = source.readInt();
         mModules = new ArrayList<>();
         source.readTypedList(mModules, ModuleInfo.CREATOR);
     }
@@ -34,6 +38,9 @@ public final class CourseInfo implements Parcelable {
 
     public String getTitle() {
         return mTitle;
+    }
+    public  int getCourseID(){
+        return mCourseID;
     }
 
     public List<ModuleInfo> getModules() {
@@ -94,8 +101,8 @@ public final class CourseInfo implements Parcelable {
         dest.writeTypedList(mModules);
     }
 
-    public static final Creator<CourseInfo> CREATOR =
-            new Creator<CourseInfo>() {
+    public static final Parcelable.Creator<CourseInfo> CREATOR =
+            new Parcelable.Creator<CourseInfo>() {
 
                 @Override
                 public CourseInfo createFromParcel(Parcel source) {

@@ -1,10 +1,12 @@
-package com.jwhh.jim.notekeeper;
+package ke.co.keronei.student;
 
 import android.content.Context;
 import android.database.Cursor;
 import android.util.Log;
 
-import com.jwhh.jim.notekeeper.NoteKeeperProviderContract.Notes;
+
+import static ke.co.keronei.student.StudentProviderContract.Notes;
+
 
 /**
  * Created by Jim.

@@ -6,4 +6,20 @@
         android:orderInCategory="100"
         android:title="@string/action_settings"
         app:showAsAction="never" />
+
+    <item
+        android:id="@+id/backup_note"
+        android:icon="@android:drawable/ic_media_next"
+        android:orderInCategory="100"
+        android:title="Backup"
+
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/upload_note"
+        android:icon="@android:drawable/ic_media_next"
+        android:orderInCategory="100"
+        android:title="Upload"
+
+        app:showAsAction="never" />
 </menu>

@@ -2,6 +2,7 @@ package ke.co.keronei.student;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,13 +32,14 @@ public class DataManager {
             SQLiteDatabase db = openHelper.getReadableDatabase();
         String[] columnsCourse = {
                 CourseInfoEntry.COLUMN_COURSE_ID,
-                CourseInfoEntry.COLUMN_COURSE_TITLE};
+                CourseInfoEntry.COLUMN_COURSE_TITLE,
+        CourseInfoEntry._ID};
         Cursor CourseCursor = db.query(CourseInfoEntry.TABLE_NAME, columnsCourse, null, null, null
                 , null, CourseInfoEntry.COLUMN_COURSE_TITLE + " DESC");
 
         loadCoursesFromDataBase(CourseCursor);
 
-        String[] NotesColumns = {
+    /*    String[] NotesColumns = {
                 NoteInfoEntry.COLUMN_COURSE_ID,
                 NoteInfoEntry.COLUMN_NOTE_TEXT,
                 NoteInfoEntry.COLUMN_NOTE_TITLE,
@@ -47,12 +49,12 @@ public class DataManager {
         Cursor NotesCursor = db.query(NoteInfoEntry.TABLE_NAME, NotesColumns, null,
                 null, null, null, OrderClient);
 
-        loadNotesFromDatabase(NotesCursor);
+       // loadNotesFromDatabase(NotesCursor);*/
 
 
     }
 
-    private static void loadNotesFromDatabase(Cursor notesCursor) {
+    /*private static void loadNotesFromDatabase(Cursor notesCursor) {
         int noteTitlePos = notesCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
         int noteTextPos = notesCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TEXT);
         int courseIdPos = notesCursor.getColumnIndex(NoteInfoEntry.COLUMN_COURSE_ID);
@@ -75,19 +77,21 @@ public class DataManager {
 
 
 
-    }
+    }*/
 
     private static void loadCoursesFromDataBase(Cursor courseCursor) {
         int courseIDPos = courseCursor.getColumnIndex(CourseInfoEntry.COLUMN_COURSE_ID);
         int courseTitlePos = courseCursor.getColumnIndex(CourseInfoEntry.COLUMN_COURSE_TITLE);
+        int courseIdPositionID = courseCursor.getColumnIndex(CourseInfoEntry._ID);
 
         DataManager dm = getInstance();
         dm.mCourses.clear();
         while (courseCursor.moveToNext()){
             String courseId = courseCursor.getString(courseIDPos);
             String CourseTitle = courseCursor.getString(courseTitlePos);
+            int CourseID = courseCursor.getInt(courseIdPositionID);
 
-            CourseInfo course = new CourseInfo(courseId, CourseTitle, null);
+            CourseInfo course = new CourseInfo(courseId, CourseTitle, CourseID, null);
             dm.mCourses.add(course);
         }
         courseCursor.close();
@@ -125,6 +129,8 @@ public class DataManager {
     }
 
     public List<CourseInfo> getCourses() {
+
+        //Log.d("COURSES", mCourses.toString());
         return mCourses;
     }
 
@@ -158,13 +164,13 @@ public class DataManager {
     }
 
     //region Initialization code
-
+/*
     private void initializeCourses() {
         mCourses.add(initializeCourse1());
         mCourses.add(initializeCourse2());
         mCourses.add(initializeCourse3());
         mCourses.add(initializeCourse4());
-    }
+    }*/
 
     public void initializeExampleNotes() {
         final DataManager dm = getInstance();
@@ -209,7 +215,7 @@ public class DataManager {
                 "Remember to include SerialVersionUID to assure version compatibility"));
     }
 
-    private CourseInfo initializeCourse1() {
+   /* private CourseInfo initializeCourse1() {
         List<ModuleInfo> modules = new ArrayList<>();
         modules.add(new ModuleInfo("android_intents_m01", "Android Late Binding and Intents"));
         modules.add(new ModuleInfo("android_intents_m02", "Component activation with intents"));
@@ -264,6 +270,7 @@ public class DataManager {
 
         return new CourseInfo("java_core", "Java Fundamentals: The Core Platform", modules);
     }
+    */
 
     public int createNewNote(CourseInfo course, String noteTitle, String noteText) {
         int index = createNewNote();

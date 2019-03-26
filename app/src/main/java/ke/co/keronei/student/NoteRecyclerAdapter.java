@@ -3,8 +3,8 @@ package ke.co.keronei.student;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,15 +13,15 @@ import android.widget.TextView;
 import static ke.co.keronei.student.StudentNoteDataBaseContract.CourseInfoEntry;
 import static ke.co.keronei.student.StudentNoteDataBaseContract.NoteInfoEntry;
 
-public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter.ViewHolder>  {
+public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapter.ViewHolder> {
     private final Context theContext;
     private final LayoutInflater layoutInflater;
-    private   Cursor mCursor;
+    private Cursor mCursor;
     private int coursePos;
     private int mNoteTitlePos;
     private int mIdPos;
 
-    public NoteRecylerAdapter(Context mcontext, Cursor cursor) {
+    public NoteRecyclerAdapter(Context mcontext, Cursor cursor) {
         theContext = mcontext;
         mCursor = cursor;
         layoutInflater = LayoutInflater.from(theContext);
@@ -31,7 +31,7 @@ public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter
     }
 
     private void populateColumnPositions() {
-        if(mCursor == null)
+        if (mCursor == null)
             return;
 
         coursePos = mCursor.getColumnIndex(CourseInfoEntry.COLUMN_COURSE_TITLE);
@@ -40,8 +40,9 @@ public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter
 
 
     }
-    public void changeCursor(Cursor cursor){
-        if(mCursor != null )
+
+    public void changeCursor(Cursor cursor) {
+        if (mCursor != null)
             mCursor.close();
 
         mCursor = cursor;
@@ -49,23 +50,30 @@ public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter
         notifyDataSetChanged();
     }
 
+    public int CheckNoteIdToRemove(int noteId){
+        mCursor.moveToPosition(noteId);
+
+        return mCursor.getInt(mIdPos);
+
+
+    }
+
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View itemView = layoutInflater.inflate(R.layout.item_in_list, viewGroup, false);
-        return new ViewHolder(itemView );
+        return new ViewHolder(itemView);
     }
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int i) {
-
-       mCursor.moveToPosition(i);
-       String courseTitle = mCursor.getString(coursePos);
-       String noteTitle = mCursor.getString(mNoteTitlePos);
-       int id = mCursor.getInt(mIdPos);
+        mCursor.moveToPosition(i);
+        String courseTitle = mCursor.getString(coursePos);
+        String noteTitle = mCursor.getString(mNoteTitlePos);
+        int id = mCursor.getInt(mIdPos);
 
         viewHolder.mCourseName.setText(courseTitle);
-        viewHolder.mNoteHead.setText(noteTitle) ;
+        viewHolder.mNoteHead.setText(noteTitle);
         viewHolder.mNoteIdInDatabase = id;
     }
 
@@ -74,7 +82,7 @@ public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter
         return mCursor == null ? 0 : mCursor.getCount();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder{
+    public class ViewHolder extends RecyclerView.ViewHolder {
 
         public final TextView mCourseName;
         public final TextView mNoteHead;
@@ -92,12 +100,14 @@ public class NoteRecylerAdapter extends  RecyclerView.Adapter<NoteRecylerAdapter
                 @Override
                 public void onClick(View v) {
                     //Snackbar.make(itemView,String.valueOf(mNoteIdInDatabase), Snackbar.LENGTH_LONG).show();
-                   Intent intent = new Intent(theContext, NoteActivity.class);
-                   intent.putExtra(NoteActivity.NOTE_ID, mNoteIdInDatabase);
-                   theContext.startActivity(intent);
+                    Intent intent = new Intent(theContext, NoteActivity.class);
+                    intent.putExtra(NoteActivity.NOTE_ID, mNoteIdInDatabase);
+                    theContext.startActivity(intent);
                 }
             });
 
         }
+
+
     }
 }

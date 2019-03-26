@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Student</string>
-    <string name="edit_note">Edit Notes</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_notes_list">Notes</string>
     <string name="title_activity_main">Student Notes</string>
@@ -10,7 +9,7 @@
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="heading_hint">Heading</string>
-    <string name="jolt_your_notes_here_hint">Jolt your notes here</string>
+
     <string name="title_activity_settings">Settings</string>
 
     <!-- Strings related to Settings -->
@@ -115,4 +114,23 @@
         turpis viverra rhoncus sit amet nec magna. Donec lacinia ligula at libero volutpat volutpat
         nec nec tortor.
     </string>
+    <string name="edit_note">Edit Note</string>
+    <string name="jolt_your_notes_here_hint">Jolt your notes here</string>
+
+    <string name="test_notification_title_template">Test: %1$s</string>
+
+    <!-- TODO: remove this placeholder text -->
+    <string name="test_notification_placeholder_text_template">You said %1$s and lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Etiam non enim magna. Morbi dictum, velit vel semper
+        venenatis, magna odio volutpat velit, at ullamcorper nulla lacus sed turpis. Pellentesque
+        vitae metus elit, nec tincidunt tellus. Integer sed nisl sem, ullamcorper ornare lacus. Duis
+        ac mauris sed massa congue volutpat. Donec sed erat sit amet turpis viverra rhoncus sit amet
+        nec magna. Donec lacinia ligula at libero volutpat volutpat nec nec tortor.
+    </string>
+
+    <string name="action_share">Share</string>
+    <string name="action_reply">Reply</string>
+    <string name="create_new_unit">Create new Unit</string>
+    <string name="unit_name">Course name</string>
+    <string name="create_course_and_dismiss_dialog">create course and dismiss dialog</string>
 </resources>

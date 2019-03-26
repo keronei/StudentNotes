@@ -51,6 +51,9 @@ public class RemindNotesReview {
         Intent launchActivity  = new Intent(context, NoteActivity.class);
         launchActivity.putExtra(NoteActivity.NOTE_ID, noteId);
 
+        Intent startBackup = new Intent(context, BackupService.class);
+        startBackup.putExtra(BackupService.EXTRA_COURSE_ID, NoteBackup.ALL_COURSES);
+
 
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
 
@@ -105,6 +108,13 @@ public class RemindNotesReview {
                                 context,
                         0,
                         new Intent(context,MainActivity.class),
+                                PendingIntent.FLAG_UPDATE_CURRENT))
+                .addAction(R.drawable.ic_sync_black_24dp,
+                        "Backup all",
+                        PendingIntent.getService(
+                                context,
+                                0,
+                               startBackup,
                                 PendingIntent.FLAG_UPDATE_CURRENT))
 
                 // Automatically dismiss the notification when it is touched.

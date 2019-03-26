@@ -20,7 +20,7 @@ public final class StudentNoteDataBaseContract {
 
         public static final String SQL_CREATE_TABLE = "CREATE TABLE " +TABLE_NAME+
                 "(" + _ID + " INTEGER PRIMARY KEY,"+
-                COLUMN_COURSE_ID +" TEXT UNIQUE NOT NULL," +
+                COLUMN_COURSE_ID +" TEXT UNIQUE," +
                 COLUMN_COURSE_TITLE + " TEXT NOT NULL)";
     }
 public static final class NoteInfoEntry implements BaseColumns {
@@ -42,6 +42,7 @@ public static final class NoteInfoEntry implements BaseColumns {
                     _ID + " INTEGER PRIMARY KEY," +
                     COLUMN_NOTE_TITLE + " TEXT NOT NULL,"+
                     COLUMN_NOTE_TEXT + " TEXT," +
-                    COLUMN_COURSE_ID + " TEXT NOT NULL)";
+                    COLUMN_COURSE_ID + " TEXT NOT NULL," +
+                    "FOREIGN KEY("+COLUMN_COURSE_ID+") REFERENCES "+CourseInfoEntry.TABLE_NAME+"("+CourseInfoEntry._ID+") ON DELETE RESTRICT)";
 }
 }

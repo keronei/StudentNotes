@@ -22,8 +22,8 @@ public class StudentNoteOpenHelper extends SQLiteOpenHelper{
         db.execSQL(NoteInfoEntry.CREATE_INDEX1);
 
         DatabaseDataWorker worker = new DatabaseDataWorker(db);
-        worker.insertCourses();
-        worker.insertSampleNotes();
+        //worker.insertCourses();
+        //worker.insertSampleNotes();
     }
 
     @Override

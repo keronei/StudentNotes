@@ -26,6 +26,9 @@ public final class StudentProviderContract {
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, PATH);
 
 
+    }
+
+    public abstract  @interface ForeignKey{
 
     }
 

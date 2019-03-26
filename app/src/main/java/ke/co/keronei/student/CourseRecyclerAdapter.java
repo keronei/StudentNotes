@@ -1,7 +1,6 @@
 package ke.co.keronei.student;
 
 import android.content.Context;
-import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
@@ -12,13 +11,13 @@ import android.widget.TextView;
 
 import java.util.List;
 
-public class CourseRecylerAdapter extends  RecyclerView.Adapter<CourseRecylerAdapter.ViewHolder>  {
+public class CourseRecyclerAdapter extends  RecyclerView.Adapter<CourseRecyclerAdapter.ViewHolder>  {
     private final Context theContext;
     private final LayoutInflater layoutInflater;
-    private  final List<CourseInfo> mCoursesList;
+    private  List<CourseInfo> mCoursesList;
     private CourseInfo mCourse;
 
-    public CourseRecylerAdapter(Context context, List<CourseInfo> mNotesList) {
+    public CourseRecyclerAdapter(Context context, List<CourseInfo> mNotesList) {
         theContext = context;
         layoutInflater = LayoutInflater.from(theContext);
         mCoursesList = mNotesList;
@@ -39,9 +38,12 @@ public class CourseRecylerAdapter extends  RecyclerView.Adapter<CourseRecylerAda
     }
 
     public void RefreshContent(List<CourseInfo> courseInfo){
-        mCoursesList.clear();
+       // if (!mCoursesList.isEmpty()){
+        //mCoursesList.clear();
 
-        mCoursesList.addAll(courseInfo);
+        mCoursesList = courseInfo;
+
+        //}
 
     }
 

@@ -1,5 +1,7 @@
 package ke.co.keronei.student;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -8,35 +10,40 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import static ke.co.keronei.student.StudentNoteDataBaseContract.CourseInfoEntry;
 import static ke.co.keronei.student.StudentNoteDataBaseContract.NoteInfoEntry;
 import static ke.co.keronei.student.StudentProviderContract.Courses;
 import static ke.co.keronei.student.StudentProviderContract.Notes;
 
-public class NoteActivity extends  AppCompatActivity  implements LoaderManager.LoaderCallbacks<Cursor>{
+public class NoteActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    public  static final String NOTE_ID = "ke.co.keronei.student.NOTE_ID";
+    public static final String NOTE_ID = "ke.co.keronei.student.NOTE_ID";
 
-    public  static final String ORIGINAL_NOTE_ID = "ke.co.keronei.student.ORIGINAL_NOTE_ID";
-    public  static final String ORIGINAL_NOTE_HEAD = "ke.co.keronei.student.ORIGINAL_NOTE_HEAD";
+    public static final String ORIGINAL_NOTE_ID = "ke.co.keronei.student.ORIGINAL_NOTE_ID";
+    public static final String ORIGINAL_NOTE_HEAD = "ke.co.keronei.student.ORIGINAL_NOTE_HEAD";
 
-    public  static final String ORIGINAL_NOTE_CONTENT = "ke.co.keronei.student.ORIGINAL_NOTE_CONTENT";
+    public static final String ORIGINAL_NOTE_CONTENT = "ke.co.keronei.student.ORIGINAL_NOTE_CONTENT";
 
     public static final int ID_DEFAULT = -1;
     public static final int LOADER_COURSES_ID = 0;
+    public static final String M_NOTEURI = "ke.co.keronei.student.MNOTEURI";
 
     private NoteInfo note;
     private boolean isNewNoteState;
@@ -61,6 +68,7 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
     private int LOADER_NOTES = 1;
     private boolean mNotesQueryFinished;
     private Uri mNoteUri;
+    private ModuleStatusView moduleStatusView;
 
     @Override
     protected void onDestroy() {
@@ -80,8 +88,8 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
         notesSpinner = (Spinner) findViewById(R.id.spinner_note_selector);
 
 
-        simpleCursorAdapter = new SimpleCursorAdapter(this, android.R.layout.simple_spinner_item,null,
-                new String[]{CourseInfoEntry.COLUMN_COURSE_TITLE},new int[]{android.R.id.text1},0);
+        simpleCursorAdapter = new SimpleCursorAdapter(this, android.R.layout.simple_spinner_item, null,
+                new String[]{CourseInfoEntry.COLUMN_COURSE_TITLE}, new int[]{android.R.id.text1}, 0);
 
         simpleCursorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
@@ -91,10 +99,12 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
         getSupportLoaderManager().initLoader(LOADER_COURSES_ID, null, this);
 
         readDisplayStatevalues();
-        if(savedInstanceState == null){
+        if (savedInstanceState == null) {
             saveOriginals();
-        }else {
+        } else {
             restoreInstanceState(savedInstanceState);
+            String restoredMnoteValue = savedInstanceState.getString(M_NOTEURI);
+            mNoteUri = Uri.parse(restoredMnoteValue);
         }
 
 
@@ -102,14 +112,28 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
 
         notecontent = (EditText) findViewById(R.id.edit_note_content);
 
-        if(!isNewNoteState)
+        if (!isNewNoteState)
 
             getSupportLoaderManager().initLoader(LOADER_NOTES, null, this);
+        moduleStatusView = findViewById(R.id.module_status_view);
 
+        loadModuleStatusValues();
+    }
+
+    private void loadModuleStatusValues() {
+        int totalModules = 8;
+        int completedModules = 6;
+
+        boolean[] moduleStatus = new boolean[totalModules];
+        for (int moduleIndex = 0; moduleIndex < completedModules; moduleIndex++) {
+            moduleStatus[moduleIndex] = true;
+        }
+
+        moduleStatusView.setmModuleStatus(moduleStatus);
     }
 
 
-    public void updateNoteToDatabase(String courseId, String noteTitle, String noteText){
+    public void updateNoteToDatabase(String courseId, String noteTitle, String noteText) {
         String selection = NoteInfoEntry._ID + " = ? ";
         String[] selectionArgs = {Integer.toString(databaseId)};
         ContentValues contentValues = new ContentValues();
@@ -117,13 +141,13 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
         contentValues.put(NoteInfoEntry.COLUMN_NOTE_TITLE, noteTitle);
         contentValues.put(NoteInfoEntry.COLUMN_NOTE_TEXT, noteText);
 
-      getContentResolver().update(mNoteUri, contentValues, null, null);
+        getContentResolver().update(mNoteUri, contentValues, null, null);
     }
 
 
     private void loadSomeCourseData() {
 
-        Uri uri  = Uri.parse("content://ke.co.keronei.student.provider");
+        Uri uri = Uri.parse("content://ke.co.keronei.student.provider");
         String[] columns = {
                 CourseInfoEntry.COLUMN_COURSE_TITLE,
                 CourseInfoEntry.COLUMN_COURSE_ID,
@@ -147,7 +171,7 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
     }
 
     private void saveOriginals() {
-        if(isNewNoteState)
+        if (isNewNoteState)
             return;
     }
 
@@ -159,6 +183,7 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
         outState.putString(ORIGINAL_NOTE_ID, originalNoteId);
         outState.putString(ORIGINAL_NOTE_HEAD, originalNoteHead);
         outState.putString(ORIGINAL_NOTE_CONTENT, originalNoteContent);
+        outState.putString(M_NOTEURI, mNoteUri.toString());
     }
 
 
@@ -175,53 +200,77 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
         noteHead.setText(noteTitle);
 
         notecontent.setText(noteActualText);
+
+        EventBroadcastHelper.sendEventBroadcast(this, courseId, "Editing Note started.");
     }
 
     private int getIndexOf(String courseId) {
         Cursor cursor = simpleCursorAdapter.getCursor();
 
-        int courseIdPos = cursor.getColumnIndex(CourseInfoEntry.COLUMN_COURSE_ID);
+        int courseIdPos = cursor.getColumnIndex(CourseInfoEntry._ID);
 
         int currentPosOfCourse = 0;
 
         Boolean isMoreValues = cursor.moveToFirst();
 
-        while (isMoreValues){
+        while (isMoreValues) {
             String courseID = cursor.getString(courseIdPos);
 
-            if(courseID.equals(courseId))
+            if (courseID.equals(courseId))
                 break;
             ++currentPosOfCourse;
             isMoreValues = cursor.moveToNext();
 
         }
-        return  currentPosOfCourse;
+        return currentPosOfCourse;
     }
 
     private void readDisplayStatevalues() {
-       Intent intent = getIntent();
+        Intent intent = getIntent();
 
         databaseId = intent.getIntExtra(NOTE_ID, ID_DEFAULT);
 
         isNewNoteState = databaseId == ID_DEFAULT;
 
 
-        if(isNewNoteState){
+        if (isNewNoteState) {
             createNewNote();
         }
-            //note = DataManager.getInstance().getNotes().get(databaseId);
+        //note = DataManager.getInstance().getNotes().get(databaseId);
 
     }
 
     private void createNewNote() {
+        AsyncTask<ContentValues, Void, Uri> task = new AsyncTask<ContentValues, Void, Uri>() {
+            @Override
+            protected Uri doInBackground(ContentValues... contentValues) {
+                Log.d("NOTEACTIVITY", "DoingInBackground-:" + Thread.currentThread().getId());
+
+                ContentValues cv = contentValues[0];
+
+
+                //this returns a uri with /table/id -> to be used for update/deletion
+                Uri rowUri = getContentResolver().insert(Notes.CONTENT_URI, cv);
+                return rowUri;
+            }
+
+            @Override
+            protected void onPostExecute(Uri uri) {
+                Log.d("NOTEACTIVITY", "OnPostexecute-:" + Thread.currentThread().getId());
+
+                mNoteUri = uri;
+                Toast.makeText(getApplicationContext(), mNoteUri.toString(), Toast.LENGTH_SHORT).show();
+
+            }
+        };
+
         ContentValues contentValues = new ContentValues();
         contentValues.put(Notes.COLUMN_COURSE_ID, "");
         contentValues.put(Notes.COLUMN_NOTE_TITLE, "");
         contentValues.put(Notes.COLUMN_NOTE_TEXT, "");
+        Log.d("NOTEACTIVITY", "Call to execute thread insert-:" + Thread.currentThread().getId());
 
-        //this returns a uri with /table/id -> to be used for update/deletion
-        mNoteUri = getContentResolver().insert(Notes.CONTENT_URI, contentValues);
-
+        task.execute(contentValues);
 
     }
 
@@ -236,13 +285,13 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
     protected void onPause() {
         super.onPause();
 
-        if(isCancellingNote){
-            if(isNewNoteState) {
+        if (isCancellingNote) {
+            if (isNewNoteState) {
                 removePlaceHolderFromDatabase();
-            }else {
+            } else {
                 storePreviousCourseValues();
             }
-        }else {
+        } else {
             SaveNote();
 
         }
@@ -257,7 +306,7 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
         AsyncTask delete = new AsyncTask() {
             @Override
             protected Object doInBackground(Object[] objects) {
-              getContentResolver().delete(mNoteUri, null,null);
+                getContentResolver().delete(mNoteUri, null, null);
 
                 return null;
             }
@@ -269,11 +318,12 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
 
 
     private void storePreviousCourseValues() {
-       // CourseInfo course = DataManager.getInstance().getCourse(originalNoteId);
+        // CourseInfo course = DataManager.getInstance().getCourse(originalNoteId);
        /* note.setCourse(course);
         note.setTitle(originalNoteHead);
         note.setText(originalNoteContent );
-    */}
+    */
+    }
 
     private void SaveNote() {
         String courseID = getTheCourseId();
@@ -289,7 +339,7 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
         int selectedItemPos = notesSpinner.getSelectedItemPosition();
         Cursor cursor = simpleCursorAdapter.getCursor();
         cursor.moveToPosition(selectedItemPos);
-        int courseIdPos = cursor.getColumnIndex(CourseInfoEntry.COLUMN_COURSE_ID);
+        int courseIdPos = cursor.getColumnIndex(CourseInfoEntry._ID);
 
         return cursor.getString(courseIdPos);
 
@@ -305,26 +355,41 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.send_mail) {
-            
+
             sendMail();
             return true;
-        }
-        else if (id == R.id.discard_note){
+        } else if (id == R.id.discard_note) {
             isCancellingNote = true;
             finish();
 
-        }else if(id == R.id.move_to_next){
+        } else if (id == R.id.move_to_next) {
             moveToNextNote();
-        }
-        else if(id == R.id.set_reminder){
+        } else if (id == R.id.set_reminder) {
             createNotification();
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+
     private void createNotification() {
-        RemindNotesReview.notify(this,noteHead.getText().toString(), notecontent.getText().toString(),(int)ContentUris.parseId(mNoteUri) );
+        Intent intent = new Intent(this, StudentNoteReminderReceiver.class);
+        intent.putExtra(StudentNoteReminderReceiver.EXTRA_NOTE_TITLE, noteHead.getText().toString());
+        intent.putExtra(StudentNoteReminderReceiver.EXTRA_NOTE_TEXT, notecontent.getText().toString());
+        intent.putExtra(StudentNoteReminderReceiver.EXTRA_NOTE_ID, (int) ContentUris.parseId(mNoteUri));
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+
+        long milisecondselapsed = SystemClock.elapsedRealtime();
+
+        long alarmTrigger = 10000;
+
+        long alarmTime = milisecondselapsed + alarmTrigger;
+
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME, alarmTime, pendingIntent);
+
     }
 
     @Override
@@ -332,7 +397,7 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
         MenuItem item = menu.findItem(R.id.move_to_next);
         lastNoteIndex = DataManager.getInstance().getNotes().size() - 1;
         item.setEnabled(noteid < lastNoteIndex);
-            return super.onPrepareOptionsMenu(menu);
+        return super.onPrepareOptionsMenu(menu);
 
     }
 
@@ -349,8 +414,8 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
 
         String subject = noteHead.getText().toString();
 
-        String content ="Hey! \n Doing some interesting Android course, Check " +course.getTitle()+"\n Here are my notes; " +
-        notecontent.getText().toString();
+        String content = "Hey! \n Doing some interesting Android course, Check " + course.getTitle() + "\n Here are my notes; " +
+                notecontent.getText().toString();
 
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("message/rfc2822");
@@ -360,7 +425,6 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
         startActivity(intent);
 
 
-
     }
 
 
@@ -368,9 +432,9 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
     @Override
     public Loader<Cursor> onCreateLoader(int i, @Nullable Bundle bundle) {
         CursorLoader loaded = null;
-        if(i==LOADER_COURSES_ID){
-           loaded = createLoaderCourses();
-        }else  if(i == LOADER_NOTES){
+        if (i == LOADER_COURSES_ID) {
+            loaded = createLoaderCourses();
+        } else if (i == LOADER_NOTES) {
             loaded = createLoaderNotes();
         }
         return loaded;
@@ -379,42 +443,43 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
     private CursorLoader createLoaderCourses() {
         mCoursesQueryFinished = false;
 
-                Uri uri  = Courses.CONTENT_URI;
+        Uri uri = Courses.CONTENT_URI;
 
 
-                String[] columnsForCourses = {
-                        Courses.COLUMN_COURSE_TITLE,
-                        Courses.COLUMN_COURSE_ID,
-                        Courses._ID
-                };
-                return new CursorLoader(this, uri, columnsForCourses, null, null,
-                        StudentProviderContract.Courses.COLUMN_COURSE_TITLE);
+        String[] columnsForCourses = {
+                Courses.COLUMN_COURSE_TITLE,
+                Courses.COLUMN_COURSE_ID,
+                Courses._ID
+        };
+        return new CursorLoader(this, uri, columnsForCourses, null, null,
+                StudentProviderContract.Courses.COLUMN_COURSE_TITLE);
 
 
-        }
+    }
 
 
     private CursorLoader createLoaderNotes() {
         mNotesQueryFinished = false;
 
-                String[] noteColumns = {
-                        Notes.COLUMN_COURSE_ID,
-                        Notes.COLUMN_NOTE_TITLE,
-                        Notes.COLUMN_NOTE_TEXT };
-                mNoteUri = ContentUris.withAppendedId(Notes.CONTENT_URI, databaseId);
+        String[] noteColumns = {
+                Notes.COLUMN_COURSE_ID,
+                Notes.COLUMN_NOTE_TITLE,
+                Notes.COLUMN_NOTE_TEXT};
+        mNoteUri = ContentUris.withAppendedId(Notes.CONTENT_URI, databaseId);
 
-                String mimetype = getContentResolver().getType(mNoteUri);
+        String mimetype = getContentResolver().getType(mNoteUri);
 
 
-                return new CursorLoader(this, mNoteUri, noteColumns, null,
-                        null, null);
+        return new CursorLoader(this, mNoteUri, noteColumns, null,
+                null, null);
 
     }
+
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
-        if(loader.getId() == LOADER_NOTES)
+        if (loader.getId() == LOADER_NOTES)
             loadFinishedNotes(cursor);
-        else if(loader.getId() == LOADER_COURSES_ID) {
+        else if (loader.getId() == LOADER_COURSES_ID) {
             simpleCursorAdapter.changeCursor(cursor);
             mCoursesQueryFinished = true;
             displayNoteWhenQueriesFinished();
@@ -436,11 +501,20 @@ public class NoteActivity extends  AppCompatActivity  implements LoaderManager.L
     }
 
     private void displayNoteWhenQueriesFinished() {
-        if(mNotesQueryFinished && mCoursesQueryFinished)
+        if (mNotesQueryFinished && mCoursesQueryFinished)
             displayNote();
     }
+
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
-
+        if (loader.getId() == LOADER_NOTES) {
+            if (mNoteCursor != null) {
+                mNoteCursor.close();
+            } else if (loader.getId() == LOADER_COURSES_ID) {
+                simpleCursorAdapter.changeCursor(null);
+            }
+        }
     }
+
+
 }

@@ -30,7 +30,7 @@ public class studentProviderCorrected extends ContentProvider {
 
     public static final int NOTES_EXPANDED = 4;
 
-    private static final  int NOTES_ROW = 3;
+    private static final int NOTES_ROW = 3;
 
     private static final int COURSE_ROW = 5;
 
@@ -38,11 +38,11 @@ public class studentProviderCorrected extends ContentProvider {
 
     static {
         sUriMatcher.addURI(AUTHORITY, Courses.PATH, COURSES);
-        sUriMatcher.addURI(AUTHORITY, Notes.PATH,  NOTES);
+        sUriMatcher.addURI(AUTHORITY, Notes.PATH, NOTES);
         sUriMatcher.addURI(AUTHORITY, Notes.PATH_EXPANDED, NOTES_EXPANDED);
-        sUriMatcher.addURI(AUTHORITY, Courses.PATH+"/#", COURSE_ROW);
-        sUriMatcher.addURI(AUTHORITY, Notes.PATH+"/#", NOTES_ROW);
-        sUriMatcher.addURI(AUTHORITY, Notes.PATH_EXPANDED+"/#", NOTE_PATH_EXPANDED_ROW);
+        sUriMatcher.addURI(AUTHORITY, Courses.PATH + "/#", COURSE_ROW);
+        sUriMatcher.addURI(AUTHORITY, Notes.PATH + "/#", NOTES_ROW);
+        sUriMatcher.addURI(AUTHORITY, Notes.PATH_EXPANDED + "/#", NOTE_PATH_EXPANDED_ROW);
     }
 
     public studentProviderCorrected() {
@@ -59,31 +59,33 @@ public class studentProviderCorrected extends ContentProvider {
         SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
 
         int uriMatch = sUriMatcher.match(uri);
-        switch (uriMatch){
+        switch (uriMatch) {
             case COURSES:
                 nRows = db.delete(CourseInfoEntry.TABLE_NAME, selection, selectionArgs);
                 break;
             case NOTES:
                 nRows = db.delete(NoteInfoEntry.TABLE_NAME, selection, selectionArgs);
+
                 break;
             case COURSE_ROW:
                 rowId = ContentUris.parseId(uri);
-                rowSelection = CourseInfoEntry._ID +"= ?";
+                rowSelection = CourseInfoEntry._ID + "= ?";
                 rowSelectionArgs = new String[]{Long.toString(rowId)};
-                nRows = db.delete(CourseInfoEntry.TABLE_NAME, rowSelection, rowSelectionArgs );
+                nRows = db.delete(CourseInfoEntry.TABLE_NAME, rowSelection, rowSelectionArgs);
                 break;
-            case NOTES_ROW :
+            case NOTES_ROW:
                 rowId = ContentUris.parseId(uri);
-                rowSelection = NoteInfoEntry._ID +"= ?";
+                rowSelection = NoteInfoEntry._ID + "= ?";
                 rowSelectionArgs = new String[]{Long.toString(rowId)};
                 nRows = db.delete(NoteInfoEntry.TABLE_NAME, rowSelection, rowSelectionArgs);
+
                 break;
             case NOTE_PATH_EXPANDED_ROW:
                 break;
             case NOTES_EXPANDED:
                 break;
         }
-    return  nRows;
+        return nRows;
     }
 
     @Override
@@ -91,11 +93,11 @@ public class studentProviderCorrected extends ContentProvider {
 
         String mimeType = null;
         int uriMatch = sUriMatcher.match(uri);
-        switch (uriMatch){
+        switch (uriMatch) {
             case COURSES:
                 mimeType = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + MIME_VENDOR_TYPE + Courses.PATH;
                 break;
-            case  NOTES:
+            case NOTES:
                 mimeType = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + MIME_VENDOR_TYPE + Notes.PATH;
                 break;
             case NOTES_EXPANDED:
@@ -104,33 +106,33 @@ public class studentProviderCorrected extends ContentProvider {
             case NOTES_ROW:
                 mimeType = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + MIME_VENDOR_TYPE + Notes.PATH;
                 break;
-                }
-                return mimeType;
+        }
+        return mimeType;
     }
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-    SQLiteDatabase slq = mDbOpenHelper.getWritableDatabase();
-    long rowId = -1;
-    Uri rowUri = null;
+        SQLiteDatabase slq = mDbOpenHelper.getWritableDatabase();
+        long rowId = -1;
+        Uri rowUri = null;
 
-    int UriMatch = sUriMatcher.match(uri);
+        int UriMatch = sUriMatcher.match(uri);
 
-    switch (UriMatch){
-        case NOTES:
-            rowId = slq.insert(NoteInfoEntry.TABLE_NAME, null, values);
-            rowUri = ContentUris.withAppendedId(Notes.CONTENT_URI, rowId);
-            break;
-        case COURSES:
-            rowId = slq.insert(CourseInfoEntry.TABLE_NAME, null, values);
-            rowUri = ContentUris.withAppendedId(Courses.CONTENT_URI, rowId);
-            break;
-        case NOTES_EXPANDED:
+        switch (UriMatch) {
+            case NOTES:
+                rowId = slq.insert(NoteInfoEntry.TABLE_NAME, null, values);
+                rowUri = ContentUris.withAppendedId(Notes.CONTENT_URI, rowId);
+                break;
+            case COURSES:
+                rowId = slq.insert(CourseInfoEntry.TABLE_NAME, null, values);
+                rowUri = ContentUris.withAppendedId(Courses.CONTENT_URI, rowId);
+                break;
+            case NOTES_EXPANDED:
 
-            break;
+                break;
 
-    }
-    return rowUri;
+        }
+        return rowUri;
     }
 
     @Override
@@ -152,7 +154,7 @@ public class studentProviderCorrected extends ContentProvider {
 
         int UriMatch = sUriMatcher.match(uri);
 
-        switch (UriMatch){
+        switch (UriMatch) {
             case COURSES:
 
                 cursor = db.query(CourseInfoEntry.TABLE_NAME, projection, selection, selectionArgs
@@ -164,34 +166,34 @@ public class studentProviderCorrected extends ContentProvider {
                         , null, null, sortOrder);
                 break;
             case NOTES_EXPANDED:
-                cursor = fetchExpanded(db, projection, selection, selectionArgs ,sortOrder);
+                cursor = fetchExpanded(db, projection, selection, selectionArgs, sortOrder);
 
                 break;
             case NOTES_ROW:
-                 rowId = ContentUris.parseId(uri);
+                rowId = ContentUris.parseId(uri);
                 String requestedRow = NoteInfoEntry._ID + "= ?";
-                 rowSelectionArgs = new String[]{Long.toString(rowId)};
+                rowSelectionArgs = new String[]{Long.toString(rowId)};
                 cursor = db.query(NoteInfoEntry.TABLE_NAME, projection, requestedRow, rowSelectionArgs,
-                        null,null, null);
+                        null, null, null);
                 break;
             case COURSE_ROW:
                 rowId = ContentUris.parseId(uri);
-                rowSelection = CourseInfoEntry._ID+"= ?";
+                rowSelection = CourseInfoEntry._ID + "= ?";
                 rowSelectionArgs = new String[]{Long.toString(rowId)};
                 cursor = db.query(CourseInfoEntry.TABLE_NAME, projection, rowSelection,
                         rowSelectionArgs, null, null, null);
                 break;
             case NOTE_PATH_EXPANDED_ROW:
                 rowId = ContentUris.parseId(uri);
-                rowSelection = NoteInfoEntry.getQualifiedName(NoteInfoEntry._ID)+" = ?";
+                rowSelection = NoteInfoEntry.getQualifiedName(NoteInfoEntry._ID) + " = ?";
                 rowSelectionArgs = new String[]{Long.toString(rowId)};
-                cursor = fetchExpanded(db, projection, rowSelection, rowSelectionArgs,null );
+                cursor = fetchExpanded(db, projection, rowSelection, rowSelectionArgs, null);
                 break;
 
         }
 
 
-        return  cursor;
+        return cursor;
     }
 
 
@@ -199,17 +201,17 @@ public class studentProviderCorrected extends ContentProvider {
 
         String[] Columns = new String[projection.length];
 
-        for (int x = 0; x< projection.length; x++){
+        for (int x = 0; x < projection.length; x++) {
             Columns[x] = projection[x].equals(BaseColumns._ID) ||
-                    projection[x].equals(CoursesIdColumns.COLUMN_COURSE_ID)?
+                    projection[x].equals(CoursesIdColumns.COLUMN_COURSE_ID) ?
                     NoteInfoEntry.getQualifiedName(projection[x]) : projection[x];
         }
 
-        String joinedTables  = NoteInfoEntry.TABLE_NAME + " JOIN " + CourseInfoEntry.TABLE_NAME +
-                " ON " + NoteInfoEntry.getQualifiedName(NoteInfoEntry.COLUMN_COURSE_ID) + " = "+
-                CourseInfoEntry.getQualifiedName(NoteInfoEntry.COLUMN_COURSE_ID);
+        String joinedTables = NoteInfoEntry.TABLE_NAME + " JOIN " + CourseInfoEntry.TABLE_NAME +
+                " ON " + NoteInfoEntry.getQualifiedName(NoteInfoEntry.COLUMN_COURSE_ID) + " = " +
+                CourseInfoEntry.getQualifiedName(CourseInfoEntry._ID);
 
-        return db.query(joinedTables, Columns, selection, selectionArgs,null,
+        return db.query(joinedTables, Columns, selection, selectionArgs, null,
                 null, sortOrder);
     }
 
@@ -223,7 +225,7 @@ public class studentProviderCorrected extends ContentProvider {
         SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
         int uriMatcher = sUriMatcher.match(uri);
 
-        switch (uriMatcher){
+        switch (uriMatcher) {
             case NOTES:
                 nRows = db.update(NoteInfoEntry.TABLE_NAME, values, selection, selectionArgs);
                 break;
@@ -248,6 +250,6 @@ public class studentProviderCorrected extends ContentProvider {
 
 
         }
-return nRows;
+        return nRows;
     }
 }

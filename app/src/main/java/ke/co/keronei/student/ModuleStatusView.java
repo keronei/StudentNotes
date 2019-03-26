@@ -5,23 +5,59 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.view.ViewCompat;
+import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
+import android.support.v4.widget.ExploreByTouchHelper;
 import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.accessibility.AccessibilityEvent;
+
+import java.util.List;
 
 /**
  * TODO: document your custom view class.
  */
 public class ModuleStatusView extends View {
+    private static final int EDIT_MODE_COUNT = 6;
+    private static final int INVALID_INDEX = -1;
+    private static final int CIRCLE_VALUE = 0;
+    private static final float ACTUAL_PIXEL_TO_RENDER = 2f;
     private String mExampleString; // TODO: use a default from R.string...
     private int mExampleColor = Color.RED; // TODO: use a default from R.color...
     private float mExampleDimension = 0; // TODO: use a default from R.dimen...
     private Drawable mExampleDrawable;
+    private float mOutLineField;
+    private float shapeSize;
+    private float spacing;
+    private Rect[] mModuleRectangle;
+    private int mOutlineColor;
+    private int fillColor;
+    private Paint mPaintFill;
+    private Paint mOutlinePaint;
+    private float radius;
+    private int maxHorizontalModules;
+    private int mShape;
+    private ModuleAccessabliltyHelper moduleAccessabliltyHelper;
 
-    private TextPaint mTextPaint;
-    private float mTextWidth;
-    private float mTextHeight;
+
+    public boolean[] getmModuleStatus() {
+        return mModuleStatus;
+    }
+
+    public void setmModuleStatus(boolean[] mModuleStatus) {
+        this.mModuleStatus = mModuleStatus;
+    }
+
+    public boolean[] mModuleStatus;
 
     public ModuleStatusView(Context context) {
         super(context);
@@ -39,143 +75,243 @@ public class ModuleStatusView extends View {
     }
 
     private void init(AttributeSet attrs, int defStyle) {
+
+        if(isInEditMode())
+            setUpEditValues();
+
+        setFocusable(true);
+
+        moduleAccessabliltyHelper = new ModuleAccessabliltyHelper(this);
+        ViewCompat.setAccessibilityDelegate(this, moduleAccessabliltyHelper);
         // Load attributes
+
+        DisplayMetrics dm = getContext().getResources().getDisplayMetrics();
+        float displayDensity = dm.density;
+
+        float defaultOutlineWidthPixel = displayDensity * ACTUAL_PIXEL_TO_RENDER;
         final TypedArray a = getContext().obtainStyledAttributes(
                 attrs, R.styleable.ModuleStatusView, defStyle, 0);
 
-        mExampleString = a.getString(
-                R.styleable.ModuleStatusView_exampleString);
-        mExampleColor = a.getColor(
-                R.styleable.ModuleStatusView_exampleColor,
-                mExampleColor);
-        // Use getDimensionPixelSize or getDimensionPixelOffset when dealing with
-        // values that should fall on pixel boundaries.
-        mExampleDimension = a.getDimension(
-                R.styleable.ModuleStatusView_exampleDimension,
-                mExampleDimension);
 
-        if (a.hasValue(R.styleable.ModuleStatusView_exampleDrawable)) {
-            mExampleDrawable = a.getDrawable(
-                    R.styleable.ModuleStatusView_exampleDrawable);
-            mExampleDrawable.setCallback(this);
-        }
+        mOutlineColor = a.getColor(R.styleable.ModuleStatusView_outlineColor, Color.BLACK);
+        mShape = a.getInt( R.styleable.ModuleStatusView_shape, CIRCLE_VALUE);
+
+        mOutLineField = a.getDimension(R.styleable.ModuleStatusView_outlineWidth,defaultOutlineWidthPixel);
 
         a.recycle();
 
-        // Set up a default TextPaint object
-        mTextPaint = new TextPaint();
-        mTextPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-        mTextPaint.setTextAlign(Paint.Align.LEFT);
+        shapeSize = 100f;
+        spacing = 20f;
+        radius = (shapeSize - mOutLineField)/2;
 
-        // Update TextPaint and text measurements from attributes
-        invalidateTextPaintAndMeasurements();
+
+
+        mOutlinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mOutlinePaint.setStyle(Paint.Style.STROKE);
+        mOutlinePaint.setStrokeWidth(mOutLineField);
+        mOutlinePaint.setColor(mOutlineColor);
+        fillColor = getContext().getResources().getColor(R.color.my_prefered_color);
+
+        mPaintFill = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaintFill.setStyle(Paint.Style.FILL);
+        mPaintFill.setColor(fillColor);
+
     }
 
-    private void invalidateTextPaintAndMeasurements() {
-        mTextPaint.setTextSize(mExampleDimension);
-        mTextPaint.setColor(mExampleColor);
-        mTextWidth = mTextPaint.measureText(mExampleString);
+    @Override
+    protected void onFocusChanged(boolean gainFocus, int direction, @Nullable Rect previouslyFocusedRect) {
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
+        moduleAccessabliltyHelper.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
+    }
 
-        Paint.FontMetrics fontMetrics = mTextPaint.getFontMetrics();
-        mTextHeight = fontMetrics.bottom;
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        return moduleAccessabliltyHelper.dispatchKeyEvent(event) || super.dispatchKeyEvent(event);
+
+    }
+
+    @Override
+    protected boolean dispatchHoverEvent(MotionEvent event) {
+        return moduleAccessabliltyHelper.dispatchHoverEvent(event) || super.dispatchHoverEvent(event);
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        setupModuleRectangles(w);
+    }
+
+    private void setUpEditValues() {
+        boolean[] editModeValue = new boolean[EDIT_MODE_COUNT];
+
+        int midleCount = EDIT_MODE_COUNT/2;
+
+        for(int i = 0; i < midleCount; i++){
+            editModeValue[i] = true;
+        }
+
+        setmModuleStatus(editModeValue );
+    }
+
+    private void setupModuleRectangles(int width) {
+
+        int availablewidth = width-getPaddingLeft() - getPaddingRight();
+        int horizontalModulesThatcanFit = (int)(availablewidth / (shapeSize + spacing));
+        int XmaxHorizontalModules = Math.min(horizontalModulesThatcanFit, mModuleStatus.length);
+
+
+
+        mModuleRectangle = new Rect[mModuleStatus.length];
+        for(int moduleIndex = 0; moduleIndex < mModuleRectangle.length; moduleIndex ++){
+            int column = moduleIndex % XmaxHorizontalModules;
+            int row = moduleIndex / XmaxHorizontalModules;
+
+            int x = getPaddingLeft() + (int)(column *( shapeSize + spacing));
+            int y = getPaddingTop() + (int)(row * (shapeSize + spacing));
+            mModuleRectangle[moduleIndex] = new Rect(x, y, x +(int)shapeSize, y+(int)shapeSize);
+        }
+    }
+
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int desiredWidth = 0;
+        int desireHeight = 0;
+
+        int specWidth = MeasureSpec.getSize(widthMeasureSpec);
+        int availavleWidth = specWidth - getPaddingLeft() - getPaddingRight();
+        int horizontalModuleThatCanFit = (int)(availavleWidth / (shapeSize + spacing));
+        maxHorizontalModules = Math.min(horizontalModuleThatCanFit, mModuleStatus.length);
+
+        desiredWidth = (int)((maxHorizontalModules *(spacing + shapeSize)) - spacing);
+
+        desiredWidth += getPaddingLeft() + getPaddingRight();
+
+        int rows = ((mModuleStatus.length - 1)/maxHorizontalModules) + 1;
+
+        desireHeight = (int)((rows * (shapeSize + spacing))- spacing);
+        desireHeight += getPaddingBottom() + getPaddingTop();
+
+        int width = resolveSizeAndState(desiredWidth, widthMeasureSpec, 0);
+        int height = resolveSizeAndState(desireHeight, heightMeasureSpec, 0);
+
+        setMeasuredDimension(width,height);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        // TODO: consider storing these as member variables to reduce
-        // allocations per draw cycle.
-        int paddingLeft = getPaddingLeft();
-        int paddingTop = getPaddingTop();
-        int paddingRight = getPaddingRight();
-        int paddingBottom = getPaddingBottom();
 
-        int contentWidth = getWidth() - paddingLeft - paddingRight;
-        int contentHeight = getHeight() - paddingTop - paddingBottom;
+        for(int moduleIndex = 0; moduleIndex < mModuleRectangle.length; moduleIndex ++){
+            if(mShape == CIRCLE_VALUE){
+            float x = mModuleRectangle[moduleIndex].centerX();
+            float y = mModuleRectangle[moduleIndex].centerY();
 
-        // Draw the text.
-        canvas.drawText(mExampleString,
-                paddingLeft + (contentWidth - mTextWidth) / 2,
-                paddingTop + (contentHeight + mTextHeight) / 2,
-                mTextPaint);
 
-        // Draw the example drawable on top of the text.
-        if (mExampleDrawable != null) {
-            mExampleDrawable.setBounds(paddingLeft, paddingTop,
-                    paddingLeft + contentWidth, paddingTop + contentHeight);
-            mExampleDrawable.draw(canvas);
+            if(mModuleStatus[moduleIndex])
+                 canvas.drawCircle(x, y, radius, mPaintFill);
+
+            canvas.drawCircle(x,y, radius, mOutlinePaint);
+
+        }else{
+                drawSquare(canvas, moduleIndex);
+            }
+    }}
+    private void drawSquare(Canvas canvas, int moduleIndex) {
+        Rect moduleRectangle = mModuleRectangle[moduleIndex];
+
+        if(mModuleStatus[moduleIndex])
+            canvas.drawRect(moduleRectangle, mPaintFill);
+
+        canvas.drawRect(moduleRectangle.left + (mOutLineField/2),
+                moduleRectangle.top + (mOutLineField/2),
+                moduleRectangle.right - (mOutLineField/2),
+                moduleRectangle.bottom - (mOutLineField/2),
+                mOutlinePaint);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()){
+            case MotionEvent.ACTION_DOWN:
+                return  true;
+            case MotionEvent.ACTION_UP:
+                int touchedModuleIndex = findItemAtPosition(event.getX(), event.getY());
+                onModuleSelected(touchedModuleIndex);
+                return true;
+
+
+
         }
+        return super.onTouchEvent(event);
     }
 
-    /**
-     * Gets the example string attribute value.
-     * @return The example string attribute value.
-     */
-    public String getExampleString() {
-        return mExampleString;
+    private void onModuleSelected(int touchedModuleIndex) {
+        //check that the passed index is a valid one
+        if(touchedModuleIndex == INVALID_INDEX)
+            return;
+        mModuleStatus[touchedModuleIndex] = !mModuleStatus[touchedModuleIndex];
+        invalidate();
+
+        moduleAccessabliltyHelper.invalidateVirtualView(touchedModuleIndex);
+
+        moduleAccessabliltyHelper.sendEventForVirtualView(touchedModuleIndex, AccessibilityEvent.TYPE_VIEW_CLICKED);
     }
 
-    /**
-     * Sets the view's example string attribute value. In the example view, this string
-     * is the text to draw.
-     * @param exampleString The example string attribute value to use.
-     */
-    public void setExampleString(String exampleString) {
-        mExampleString = exampleString;
-        invalidateTextPaintAndMeasurements();
+    private int findItemAtPosition(float x, float y) {
+        int moduleIndex = INVALID_INDEX;
+        for(int index = 0; index < mModuleRectangle.length; index ++){
+            if(mModuleRectangle[index].contains((int)x, (int)y)){
+                moduleIndex  = index;
+                break;
+            }
+        }
+        return moduleIndex;
     }
 
-    /**
-     * Gets the example color attribute value.
-     * @return The example color attribute value.
-     */
-    public int getExampleColor() {
-        return mExampleColor;
-    }
+    private class ModuleAccessabliltyHelper extends ExploreByTouchHelper{
+        public ModuleAccessabliltyHelper(@NonNull View host) {
+            super(host);
+        }
 
-    /**
-     * Sets the view's example color attribute value. In the example view, this color
-     * is the font color.
-     * @param exampleColor The example color attribute value to use.
-     */
-    public void setExampleColor(int exampleColor) {
-        mExampleColor = exampleColor;
-        invalidateTextPaintAndMeasurements();
-    }
+        @Override
+        protected int getVirtualViewAt(float v, float v1) {
+            int moduleIndex = findItemAtPosition(v, v1);
+            return moduleIndex == INVALID_INDEX ? ExploreByTouchHelper.INVALID_ID : moduleIndex;
+        }
 
-    /**
-     * Gets the example dimension attribute value.
-     * @return The example dimension attribute value.
-     */
-    public float getExampleDimension() {
-        return mExampleDimension;
-    }
+        @Override
+        protected void getVisibleVirtualViews(List<Integer> list) {
+            if (mModuleRectangle == null)
+                    return;
 
-    /**
-     * Sets the view's example dimension attribute value. In the example view, this dimension
-     * is the font size.
-     * @param exampleDimension The example dimension attribute value to use.
-     */
-    public void setExampleDimension(float exampleDimension) {
-        mExampleDimension = exampleDimension;
-        invalidateTextPaintAndMeasurements();
-    }
+            for(int moduleIndex = 0; moduleIndex < mModuleRectangle.length; moduleIndex ++){
+                list.add(moduleIndex);
+            }
 
-    /**
-     * Gets the example drawable attribute value.
-     * @return The example drawable attribute value.
-     */
-    public Drawable getExampleDrawable() {
-        return mExampleDrawable;
-    }
+        }
 
-    /**
-     * Sets the view's example drawable attribute value. In the example view, this drawable is
-     * drawn above the text.
-     * @param exampleDrawable The example drawable attribute value to use.
-     */
-    public void setExampleDrawable(Drawable exampleDrawable) {
-        mExampleDrawable = exampleDrawable;
+        @Override
+        protected void onPopulateNodeForVirtualView(int i, @NonNull AccessibilityNodeInfoCompat accessibilityNodeInfoCompat) {
+
+            accessibilityNodeInfoCompat.setFocusable(true);
+            accessibilityNodeInfoCompat.setBoundsInParent(mModuleRectangle[i]);
+            accessibilityNodeInfoCompat.setContentDescription("Module" + i);
+            accessibilityNodeInfoCompat.setCheckable(true);
+            accessibilityNodeInfoCompat.setChecked(mModuleStatus[i]);
+
+            accessibilityNodeInfoCompat.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK);
+
+        }
+
+        @Override
+        protected boolean onPerformActionForVirtualView(int i, int i1, @Nullable Bundle bundle) {
+            switch (i1){
+                case AccessibilityNodeInfoCompat.ACTION_CLICK:
+                    onModuleSelected(i);
+                    return true;
+            }
+            return false;
+        }
     }
 }

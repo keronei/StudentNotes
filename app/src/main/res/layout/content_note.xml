@@ -11,11 +11,12 @@
     <Spinner
         android:id="@+id/spinner_note_selector"
         android:layout_width="0dp"
-        android:layout_height="90dp"
+        android:layout_height="50dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="10dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
+        android:nextFocusRight="@+id/edit_note_head"
         android:paddingTop="16dp"
         app:layout_constraintBottom_toTopOf="@+id/edit_note_head"
         app:layout_constraintEnd_toEndOf="parent"
@@ -26,14 +27,14 @@
         android:id="@+id/edit_note_head"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
         android:ems="10"
         android:hint="@string/heading_hint"
+
         android:inputType="textMultiLine"
+        android:nextFocusRight="@+id/edit_note_content"
 
         android:paddingTop="16dp"
         app:layout_constraintBottom_toTopOf="@+id/edit_note_content"
-
         app:layout_constraintEnd_toEndOf="@+id/spinner_note_selector"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/spinner_note_selector"
@@ -52,4 +53,19 @@
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="@+id/edit_note_head"
         app:layout_constraintTop_toBottomOf="@+id/edit_note_head" />
+
+    <view
+        android:id="@+id/module_status_view"
+        class="ke.co.keronei.student.ModuleStatusView"
+        id="@+id/view"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:padding="2dp"
+        app:layout_constraintEnd_toEndOf="@+id/edit_note_content"
+        app:layout_constraintStart_toStartOf="@+id/edit_note_content"
+        app:layout_constraintTop_toBottomOf="@+id/edit_note_content"
+        app:outlineColor="@android:color/holo_green_dark"
+        app:outlineWidth="5dp"
+        app:shape="circle" />
 </android.support.constraint.ConstraintLayout>

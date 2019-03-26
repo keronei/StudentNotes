@@ -1,4 +1,4 @@
-package com.jwhh.jim.notekeeper;
+package ke.co.keronei.student;
 
 import android.app.job.JobParameters;
 import android.content.Context;
@@ -7,7 +7,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.jwhh.jim.notekeeper.NoteKeeperProviderContract.Notes;
+import static ke.co.keronei.student.StudentProviderContract.Notes;
 
 /**
  * Created by Jim.
